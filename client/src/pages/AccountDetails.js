@@ -8,9 +8,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const AccountDetails = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
-  const [editPassword , setEditPassword] = useState(false);
-  const [editInformationDetails , setEditInformationDetails] = useState(true);
-
+  const [editPassword, setEditPassword] = useState(false);
+  const [editInformationDetails, setEditInformationDetails] = useState(false);
 
   const dispatch = useDispatch();
   const { user, isLoading } = useSelector((state) => state.auth);
@@ -22,6 +21,9 @@ const AccountDetails = () => {
     }
   }, [user]);
 
+  const isSelected = () => {
+    editPassword ? setEditInformationDetails(false) && setEditPassword(true) : setEditInformationDetails(true) && setEditPassword(false);;
+  }
 
   const handleUpdateAccountInformation = () => {
     try {
@@ -80,23 +82,29 @@ const AccountDetails = () => {
         progress: undefined,
       });
     }
-
-  
   };
-
- 
 
   return (
     <div className='container mt-5'>
-       <h2 className='text-center mb-4'>
-            Hello {user?.username}, you can update your private information here!
-          </h2>
+      <h2 className='text-center mb-4'>
+        Hello {user?.username}, you can update your private information here!
+      </h2>
       <div className='d-flex'>
-        <p className={ `m-5 btn ${editInformationDetails ? 'btn-primary' : 'none'} ` } onClick={setEditInformationDetails(!editInformationDetails)}>Edit your Information</p>
-        <p className={ `m-5 btn ${editPassword ? 'btn-primary' : 'none'} ` } onClick={setEditPassword(editPassword)}>Reset password</p>
-        </div>
-   
-        <div className='row justify-content-center'>
+        <p
+          className={`m-5 btn ${editInformationDetails ? 'btn-primary' : ''}`}
+          onClick={isSelected}
+        >
+          Edit your Information
+        </p>
+        <p
+          className={`m-5 btn ${editPassword ? 'btn-primary' : ''}`}
+          onClick={isSelected}
+        >
+          Reset password
+        </p>
+      </div>
+{editPassword ? <>
+</> : <div className='row justify-content-center'>
         <div className='col-md-6'>
           <div className='form-group'>
             <label htmlFor='email'>Email</label>
@@ -131,8 +139,9 @@ const AccountDetails = () => {
           </button>
         </div>
       </div>
-   
- 
+      }
+      
+
       <ToastContainer />
     </div>
   );

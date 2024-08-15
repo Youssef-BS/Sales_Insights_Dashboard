@@ -114,10 +114,16 @@ const Dashboard = () => {
       return acc;
     }, {});
 
-    return { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats };
+    // Calculate revenue percentage for each COMMERC
+    const commercRevenuePercentage = Object.entries(commercStats).map(([commerc, stats]) => ({
+      commerc,
+      percentage: (stats.revenue / totalRevenue) * 100,
+    }));
+
+    return { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage };
   };
 
-  const { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats } = calculateStats(filteredData);
+  const { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage } = calculateStats(filteredData);
 
   const generalConfig = {
     data: [
@@ -175,6 +181,19 @@ const Dashboard = () => {
     color: '#134B70',
   };
 
+  // New config for COMMERC revenue percentage pie chart
+  const commercRevenueConfig = {
+    data: commercRevenuePercentage,
+    angleField: 'percentage',
+    colorField: 'commerc',
+    radius: 1,
+    label: {
+      type: 'outer',
+      content: '{name} {percentage}%',
+    },
+    color: ['#508C9B', '#134B70', '#82CA9D', '#D45087', '#FF7F50'], // Example colors, adjust as needed
+  };
+
   return (
     <div className="container mt-5">
       <h2 className="text-center mb-5">Dashboard</h2>
@@ -220,34 +239,30 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="row mb-5">
-        <div className="col-md-12">
-          <h4 className="text-center mb-4">General Statistics</h4>
+      <div className="row">
+        <div className="col-md-6">
           <Column {...generalConfig} />
         </div>
-      </div>
-
-      <div className="row mb-5">
-        <div className="col-md-12">
-          <h4 className="text-center mb-4">Tunis vs Sfax Statistics</h4>
+        <div className="col-md-6">
           <Pie {...tunisSfaxConfig} />
         </div>
       </div>
 
-      <div className="row mb-5">
-        <div className="col-md-12">
-          <h4 className="text-center mb-4">Product Statistics</h4>
-          <Line {...productConfig} />
+      <div className="row mt-4">
+        <div className="col-md-6">
+          <Column {...productConfig} />
+        </div>
+        <div className="col-md-6">
+          <Column {...commercConfig} />
         </div>
       </div>
 
-      <div className="row mb-5">
+      {/* New pie chart for COMMERC revenue percentage */}
+      <div className="row mt-4">
         <div className="col-md-12">
-          <h4 className="text-center mb-4">Commerc Statistics</h4>
-          <Line {...commercConfig} />
+          <Pie {...commercRevenueConfig} />
         </div>
       </div>
-
       <div className="row">
         <div className="col-md-12">
           <h4 className="text-center mb-4">Detailed Data</h4>
