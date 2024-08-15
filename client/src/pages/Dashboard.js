@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 import { useState, useEffect, useCallback } from 'react';
 import { Select, Table } from 'antd';
-import { Column, Line, Pie } from '@ant-design/plots';
+import { Column, Pie } from '@ant-design/plots';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const { Option } = Select;
@@ -12,7 +12,7 @@ const Dashboard = () => {
   const [selectedCommerc, setSelectedCommerc] = useState('all');
   const [productOptions, setProductOptions] = useState([]);
   const [commercOptions, setCommercOptions] = useState([]);
-  const [timeFilter, setTimeFilter] = useState('all'); // New state for time filter
+  const [timeFilter, setTimeFilter] = useState('all');
 
   const loadData = useCallback(async () => {
     try {
@@ -68,7 +68,7 @@ const Dashboard = () => {
       if (filter === 'lastYear') {
         return date >= new Date(now.getFullYear() - 1, 0, 1) && date < new Date(now.getFullYear(), 0, 1);
       }
-      return true; // 'all' time filter
+      return true;
     });
   };
 
@@ -114,7 +114,6 @@ const Dashboard = () => {
       return acc;
     }, {});
 
-    // Calculate revenue percentage for each COMMERC
     const commercRevenuePercentage = Object.entries(commercStats).map(([commerc, stats]) => ({
       commerc,
       percentage: (stats.revenue / totalRevenue) * 100,
@@ -181,7 +180,6 @@ const Dashboard = () => {
     color: '#134B70',
   };
 
-  // New config for COMMERC revenue percentage pie chart
   const commercRevenueConfig = {
     data: commercRevenuePercentage,
     angleField: 'percentage',
@@ -191,7 +189,7 @@ const Dashboard = () => {
       type: 'outer',
       content: '{name} {percentage}%',
     },
-    color: ['#508C9B', '#134B70', '#82CA9D', '#D45087', '#FF7F50'], // Example colors, adjust as needed
+    color: ['#508C9B', '#134B70', '#82CA9D', '#D45087', '#FF7F50'],
   };
 
   return (
@@ -241,31 +239,64 @@ const Dashboard = () => {
 
       <div className="row">
         <div className="col-md-6">
-          <Column {...generalConfig} />
+          <div className="card">
+            <div className="card-header bg-primary text-white">
+              General Statistics
+            </div>
+            <div className="card-body">
+              <Column {...generalConfig} />
+            </div>
+          </div>
         </div>
         <div className="col-md-6">
-          <Pie {...tunisSfaxConfig} />
+          <div className="card">
+            <div className="card-header bg-primary text-white">
+              Tunis vs Sfax Transactions
+            </div>
+            <div className="card-body">
+              <Pie {...tunisSfaxConfig} />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <Column {...productConfig} />
-        </div>
-        <div className="col-md-6">
-          <Column {...commercConfig} />
-        </div>
-      </div>
-
-      {/* New pie chart for COMMERC revenue percentage */}
       <div className="row mt-4">
         <div className="col-md-12">
-          <Pie {...commercRevenueConfig} />
+          <div className="card">
+            <div className="card-header bg-primary text-white">
+              Revenue by Product
+            </div>
+            <div className="card-body">
+              <Column {...productConfig} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row mt-4">
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-header bg-primary text-white">
+              Revenue by Commerc
+            </div>
+            <div className="card-body">
+              <Column {...commercConfig} />
+            </div>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-header bg-primary text-white">
+              Commerc Revenue Percentage
+            </div>
+            <div className="card-body">
+              <Pie {...commercRevenueConfig} />
+            </div>
+          </div>
         </div>
       </div>
       <div className="row">
         <div className="col-md-12">
-          <h4 className="text-center mb-4">Detailed Data</h4>
           <Table
             columns={[
               { title: 'Date', dataIndex: 'DATETRANSACTION', render: date => new Date(date).toLocaleString() },
