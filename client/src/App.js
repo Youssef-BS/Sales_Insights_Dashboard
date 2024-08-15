@@ -1,36 +1,48 @@
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useSelector } from "react-redux";
+
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import Resetpassword from "./pages/Resetpassword";
-import Forgotpassword from "./pages/Forgotpassword";
+import ResetPassword from "./pages/Resetpassword";
+import ForgotPassword from "./pages/Forgotpassword";
 import MainLayout from "./components/MainLayout";
-
-import { useSelector } from "react-redux";
-import Authorised from "./utils/auth";
 import Signup from "./pages/SignUp";
 import Register from "./pages/register";
 import PredicateAi from "./pages/PredicateAi";
 import AddNewLine from "./pages/AddNewLine";
 import AccountDetails from "./pages/AccountDetails";
 
+import Authorised from "./utils/auth";
+
 function App() {
-  const currentUser = useSelector((state)=>state.auth.user);
-  
+  const currentUser = useSelector((state) => state.auth.user);
+
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/reset-password" element={<Resetpassword />} />
-        <Route path="/forgot-password" element={<Forgotpassword />} />
-        <Route path="/signup" element={<Register/>}/>
-        <Route path="/admin" element={<Authorised user={currentUser}> <MainLayout /></Authorised>}>
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/signup" element={<Register />} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/admin"
+          element={
+            <Authorised user={currentUser}>
+              <MainLayout />
+            </Authorised>
+          }
+        >
           <Route index element={<Dashboard />} />
-          <Route path="/admin/Predicate" element={<PredicateAi/>}/>
-          <Route path="/admin/AddNewLine" element={<AddNewLine/>}/>
-          <Route path="/admin/AccountDetails" element={<AccountDetails/>}/>
+          <Route path="Predicate" element={<PredicateAi />} />
+          <Route path="AddNewLine" element={<AddNewLine />} />
+          <Route path="AccountDetails" element={<AccountDetails />} />
         </Route>
-        <Route path= "/*" element={<Login/>}/>
+
+        {/* Fallback Route */}
+        <Route path="/*" element={<Login />} />
       </Routes>
     </Router>
   );

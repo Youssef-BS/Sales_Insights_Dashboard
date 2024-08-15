@@ -3,7 +3,7 @@ import authService from "./authServices";
 
 
 const initialState = {
-  user: null,
+  user: JSON.parse(localStorage.getItem('user')) || null,
   isError: false,
   isLoading: false,
   isSuccess: false,
@@ -26,7 +26,7 @@ export const updateAccount = createAsyncThunk(
     try {
       return await authService.updateAccount(id, userData);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data);  // Returning error response data
+      return thunkAPI.rejectWithValue(error.response.data);  
     }
   }
 );

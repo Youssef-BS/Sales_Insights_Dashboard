@@ -9,7 +9,7 @@ const AccountDetails = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [editPassword, setEditPassword] = useState(false);
-  const [editInformationDetails, setEditInformationDetails] = useState(true); // Default to editing information
+  const [editInformationDetails, setEditInformationDetails] = useState(true); 
 
   const dispatch = useDispatch();
   const { user, isLoading } = useSelector((state) => state.auth);

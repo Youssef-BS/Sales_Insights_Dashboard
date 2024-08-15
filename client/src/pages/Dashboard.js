@@ -295,8 +295,12 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <div className="row">
-        <div className="col-md-12">
+      <div className="row mt-5">
+        <div className='card'>
+        <div className="card-header bg-primary text-white">
+          All Data
+        </div>
+        <div className="card-body">
           <Table
             columns={[
               { title: 'Date', dataIndex: 'DATETRANSACTION', render: date => new Date(date).toLocaleString() },
@@ -314,6 +318,7 @@ const Dashboard = () => {
             pagination={{ pageSize: 10 }}
           />
         </div>
+      </div>
       </div>
     </div>
   );
