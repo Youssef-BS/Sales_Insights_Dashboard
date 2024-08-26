@@ -1,5 +1,6 @@
-body {
+html , body {
   font-family: Roboto, sans-serif;
+  overflow: auto;
 }
 
 .trigger {
@@ -76,3 +77,4 @@ main::-webkit-scrollbar {
   color: red;
   font-size: 12px;
 }
+

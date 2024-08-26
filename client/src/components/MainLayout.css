@@ -1,0 +1,72 @@
+:root {
+    --background: #9c88ff;
+    --navbar-width: 256px;
+    --navbar-width-min: 80px;
+    --navbar-dark-primary: #18283b;
+    --navbar-dark-secondary: #2c3e50;
+    --navbar-light-primary: #f5f6fa;
+    --navbar-light-secondary: #8392a5;
+  }
+  
+  html, body {
+    margin: 0;
+    background: var(--background);
+  }
+  
+  .logo {
+    width: auto;
+    height: auto;
+    justify-content: center;
+    text-align: center;
+    background-color: transparent;
+    margin: 34px;
+  }
+  
+  .logo img {
+    height: 75px;
+    width: 75px;
+    text-align: center;
+    border-radius: 100%;
+  }
+  
+  .site-layout {
+    background: var(--navbar-light-primary);
+  }
+  
+  .trigger {
+    cursor: pointer;
+  }
+  
+  .nav-button {
+    position: relative;
+    margin-left: 16px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    color: var(--navbar-light-secondary);
+    direction: ltr;
+    cursor: pointer;
+    z-index: 1;
+    transition: color .2s;
+  }
+  
+  .nav-button span {
+    transition: opacity 1s;
+  }
+  
+  .nav-button .fas {
+    transition: min-width .2s;
+  }
+  
+  #nav-footer {
+    position: relative;
+    width: var(--navbar-width);
+    height: 54px;
+    background: var(--navbar-dark-secondary);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    transition: width .2s, height .2s;
+  }
+  

@@ -1,10 +1,6 @@
-import React, { useState,useCallback,useEffect } from "react";
+import React, { useState } from "react";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-import {
-  AiOutlineDashboard,
-  AiOutlineSafetyCertificate ,
-  AiFillPlusCircle
-} from "react-icons/ai";
+import { AiOutlineDashboard, AiOutlineSafetyCertificate, AiFillPlusCircle } from "react-icons/ai";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
@@ -13,42 +9,40 @@ import { IoIosNotifications } from "react-icons/io";
 import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {logout}  from "../features/auth/authSlice";
-
-
-import Logo from "./logo.jpg"
-
+import { logout } from "../features/auth/authSlice";
+import Logo from "./logo.jpg";
 
 const { Header, Sider, Content } = Layout;
+
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer },
   } = theme.useToken();
   const navigate = useNavigate();
-  const dispatch=useDispatch();
-  const currentUser = useSelector((state)=>state?.auth?.user)
+  const dispatch = useDispatch();
+  const currentUser = useSelector((state) => state?.auth?.user);
 
   const logOut = () => {
-dispatch(logout()) 
-navigate("/"); // Adjust the route based on your app structure
+    dispatch(logout());
+    navigate("/"); 
+  };
 
- }
-
- console.log(currentUser)
+  console.log(currentUser);
 
   return (
-    <Layout /* onContextMenu={(e) => e.preventDefault()} */>
+    <Layout style={{ minHeight: "300vh" }}> 
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div className="logo" style={{width : "auto" , height : "auto" , justifyContent : "center" , textAlign : "center" , backgroundColor : "transparent" ,  margin : "34px" }}>
-            <img src={Logo} alt="logo" style={{height : "75px", width : "75px" , textAlign : "center" , borderRadius : "100%"  }}/>
+        <div className="logo" style={{ width: "auto", height: "auto", justifyContent: "center", textAlign: "center", backgroundColor: "transparent", margin: "34px" }}>
+          <img src={Logo} alt="logo" style={{ height: "75px", width: "75px", textAlign: "center", borderRadius: "100%" }} />
         </div>
         <Menu
           theme="dark"
           mode="inline"
           defaultSelectedKeys={[""]}
           onClick={({ key }) => {
-            if (key == "signout") {
+            if (key === "signout") {
+              logOut();
             } else {
               navigate(key);
             }
@@ -67,7 +61,7 @@ navigate("/"); // Adjust the route based on your app structure
             {
               key: "AddNewLine",
               icon: <AiFillPlusCircle className="fs-4" />,
-              label: "Add New Data ",
+              label: "Add New Data",
             },
           ]}
         />
@@ -78,6 +72,9 @@ navigate("/"); // Adjust the route based on your app structure
           style={{
             padding: 0,
             background: colorBgContainer,
+            position: "sticky",
+            top: 0,
+            zIndex: 1,
           }}
         >
           {React.createElement(
@@ -94,8 +91,7 @@ navigate("/"); // Adjust the route based on your app structure
                 3
               </span>
             </div>
-
-            <div className="d-flex gap-3 align-items-center dropdown ">
+            <div className="d-flex gap-3 align-items-center dropdown">
               <div
                 role="button"
                 id="dropdownMenuLink"
@@ -103,7 +99,7 @@ navigate("/"); // Adjust the route based on your app structure
                 aria-expanded="false"
                 className="bg-white"
               >
-                <h5 className="mb-0"><b>Welcome back{" "}{currentUser.username}</b></h5>
+                <h5 className="mb-0"><b>Welcome back {currentUser.username}</b></h5>
                 <p className="mb-0"><b>{currentUser.email}</b></p>
               </div>
               <div className="dropdown-menu" aria-labelledby="dropdownMenuLink">
@@ -122,8 +118,6 @@ navigate("/"); // Adjust the route based on your app structure
                     style={{ height: "auto", lineHeight: "20px" }}
                     onClick={logOut}
                     to="/"
-                   
-                    
                   >
                     Signout
                   </Link>
@@ -136,8 +130,9 @@ navigate("/"); // Adjust the route based on your app structure
           style={{
             margin: "24px 16px",
             padding: 24,
-            minHeight: 280,
+            minHeight: "calc(100vh - 64px)", 
             background: colorBgContainer,
+            overflow: "auto", 
           }}
         >
           <ToastContainer
@@ -157,4 +152,5 @@ navigate("/"); // Adjust the route based on your app structure
     </Layout>
   );
 };
+
 export default MainLayout;

@@ -62,13 +62,21 @@ const Dashboard = () => {
     const now = new Date();
     return data.filter(item => {
       const date = new Date(item.DATETRANSACTION);
-      if (filter === 'lastMonth') {
-        return date >= new Date(now.getFullYear(), now.getMonth() - 1, 1) && date < new Date(now.getFullYear(), now.getMonth(), 1);
+      if (filter === 'weekly') {
+        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+        return date >= startOfWeek && date <= new Date();
       }
-      if (filter === 'lastYear') {
-        return date >= new Date(now.getFullYear() - 1, 0, 1) && date < new Date(now.getFullYear(), 0, 1);
+      if (filter === 'monthly') {
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
       }
-      return true;
+      if (filter === 'quarterly') {
+        const quarter = Math.floor(now.getMonth() / 3);
+        return Math.floor(date.getMonth() / 3) === quarter && date.getFullYear() === now.getFullYear();
+      }
+      if (filter === 'yearly') {
+        return date.getFullYear() === now.getFullYear();
+      }
+      return true; 
     });
   };
 
@@ -81,12 +89,12 @@ const Dashboard = () => {
   );
 
   const calculateStats = (data) => {
-    const totalRevenue = data.reduce((acc, curr) => acc + curr.Montant, 0);
-    const totalQuantity = data.reduce((acc, curr) => acc + curr.QuantiteNegociee, 0);
-    const totalTransactions = data.length;
-
     const nbVente = data.filter(item => item.SensTransaction === 'V').length;
     const nbAchat = data.filter(item => item.SensTransaction === 'A').length;
+    
+    const totalRevenue = data.reduce((acc, curr) => acc + curr.Montant, 0);
+    const totalQuantity = nbAchat - nbVente ;
+    const totalTransactions = data.length;
 
     const tunisSfaxStats = data.reduce((acc, curr) => {
       if (!acc[curr.TUNSFAX]) {
@@ -119,10 +127,15 @@ const Dashboard = () => {
       percentage: (stats.revenue / totalRevenue) * 100,
     }));
 
-    return { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage };
+    const actifNetTotal = data.reduce((acc, curr) => {
+      const quantity = curr.SensTransaction === 'A' ? curr.QuantiteNegociee : -curr.QuantiteNegociee;
+      return acc + (quantity * curr.Montant);
+    }, 0);
+
+    return { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal };
   };
 
-  const { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage } = calculateStats(filteredData);
+  const { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal } = calculateStats(filteredData);
 
   const generalConfig = {
     data: [
@@ -130,12 +143,24 @@ const Dashboard = () => {
       { type: 'Total Quantity', value: totalQuantity },
       { type: 'Total Transactions', value: totalTransactions },
       { type: 'Number of Sales', value: nbVente },
-      { type: 'Number of Purchases', value: nbAchat }
+      { type: 'Number of Purchases', value: nbAchat },
+      { type: 'Actif Net Total', value: actifNetTotal }
     ],
     xField: 'type',
     yField: 'value',
     color: '#134B70',
   };
+
+  const generalTableData = generalConfig.data.map(item => ({
+    key: item.type,
+    type: item.type,
+    value: item.value,
+  }));
+
+  const columns = [
+    { title: 'Type', dataIndex: 'type', key: 'type' },
+    { title: 'Value', dataIndex: 'value', key: 'value' },
+  ];
 
   const tunisSfaxData = Object.entries(tunisSfaxStats).map(([tunsfax, count]) => ({
     type: tunsfax === 'T' ? 'Tunis' : 'Sfax',
@@ -143,17 +168,21 @@ const Dashboard = () => {
   }));
 
   const tunisSfaxConfig = {
-    data: tunisSfaxData,
+    data: tunisSfaxData.map(item => ({
+      ...item,
+      type: item.type === 'T' ? 'Tunisia' : item.type === 'S' ? 'Sfax' : item.type
+    })),
     angleField: 'value',
     colorField: 'type',
     radius: 1,
     label: {
       type: 'outer',
-      content: '{name} {percentage}',
+      content: '{name}',
     },
-    color: ['#508C9B', '#134B70'],
+    color: ['#508C9B', '#134B70'], 
   };
 
+  
   const productData = Object.entries(productStats).map(([product, stats]) => ({
     product,
     revenue: stats.revenue,
@@ -187,13 +216,14 @@ const Dashboard = () => {
     radius: 1,
     label: {
       type: 'outer',
-      content: '{name} {percentage}%',
+      content: '{name}',
     },
-    color: ['#508C9B', '#134B70', '#82CA9D', '#D45087', '#FF7F50'],
+    color: ['red', 'blue', 'yellow', 'gray', 'cyan', 'purple', '#EF5A6F', 'orange', 'green' , '#FF76CE' , '#1E0342' , '#1AACAC' , '#D2E0FB' , '#6C3428' , '#D20062' , '#F5DD61' , '#9EB8D9' , '#A25772'], 
   };
+  
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-5 ">
       <h2 className="text-center mb-5">Dashboard</h2>
 
       <div className="row mb-4">
@@ -230,23 +260,31 @@ const Dashboard = () => {
             className="form-select"
             style={{ width: '100%' }}
           >
-            <Option value="all">All Time</Option>
-            <Option value="lastMonth">Last Month</Option>
-            <Option value="lastYear">Last Year</Option>
+            <Option value="all">Tout</Option>
+            <Option value="weekly">Par Semaine</Option>
+            <Option value="monthly">Par Mois</Option>
+            <Option value="quarterly">Par Trimestre</Option>
+            <Option value="yearly">Par Année</Option>
           </Select>
         </div>
       </div>
 
       <div className="row">
         <div className="col-md-6">
-          <div className="card">
-            <div className="card-header bg-primary text-white">
-              General Statistics
-            </div>
-            <div className="card-body">
-              <Column {...generalConfig} />
-            </div>
-          </div>
+      
+        <div className="card mb-4">
+        <div className="card-header bg-primary text-white">
+          General Statistics
+        </div>
+        <div className="card-body">
+          <Table
+            dataSource={generalTableData}
+            columns={columns}
+            pagination={false}
+            bordered
+          />
+        </div>
+      </div>
         </div>
         <div className="col-md-6">
           <div className="card">
