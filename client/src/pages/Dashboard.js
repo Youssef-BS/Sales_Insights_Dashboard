@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Select, Table } from 'antd';
 import { Column, Pie } from '@ant-design/plots';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import ChatClient from './ChatClient';
 
 const { Option } = Select;
 
@@ -260,11 +261,11 @@ const Dashboard = () => {
             className="form-select"
             style={{ width: '100%' }}
           >
-            <Option value="all">Tout</Option>
-            <Option value="weekly">Par Semaine</Option>
-            <Option value="monthly">Par Mois</Option>
-            <Option value="quarterly">Par Trimestre</Option>
-            <Option value="yearly">Par Année</Option>
+            <Option value="all">ALl Time</Option>
+            <Option value="weekly">Week</Option>
+            <Option value="monthly">Monthly</Option>
+            <Option value="quarterly">3 Months</Option>
+            <Option value="yearly">Yearly</Option>
           </Select>
         </div>
       </div>
@@ -358,6 +359,7 @@ const Dashboard = () => {
         </div>
       </div>
       </div>
+      <ChatClient />
     </div>
   );
 };

@@ -9,9 +9,9 @@ import { login } from "../features/auth/authSlice";
 const schema = yup.object().shape({
   email: yup
     .string()
-    .email("Email should be valid")
-    .required("Email is Required"),
-  password: yup.string().required("Password is Required"),
+    .email("Please enter a valid email address.")
+    .required("Email is required."),
+  password: yup.string().required("Password is required."),
 });
 
 const Login = () => {
@@ -45,7 +45,7 @@ const Login = () => {
         <h3 className="text-center title">Login</h3>
         {isError && (
           <div className="error text-center">
-            {message || "Login failed. Please check your credentials and try again."}
+            {typeof message === 'string' ? message : "Login failed. Please check your credentials and try again."}
           </div>
         )}
         <form onSubmit={formik.handleSubmit}>
@@ -64,7 +64,7 @@ const Login = () => {
           <CustomInput
             type="password"
             label="Password"
-            id="pass"
+            id="password"
             name="password"
             onChng={formik.handleChange}
             onBlr={formik.handleBlur}
@@ -80,9 +80,9 @@ const Login = () => {
             className="border-0 px-3 py-2 text-white fw-bold w-100 text-center text-decoration-none fs-5"
             style={{ background: "#201E43" }}
             type="submit"
-            disabled={isLoading} // Disable the button while loading
+            disabled={isLoading}
           >
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> : 'Login'}
           </button>
           <div className="mt-3 text-center">
             <Link to="/signup">Don't have an account? Register</Link>
