@@ -43,23 +43,13 @@ const updateAccount = async (id, userData) => {
   return response.data;
 };
 
-const logout = async () => {
-  try {
-    const response = await axios.get(`${base_url}/logout`);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    setAuthToken(null);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+
 
 const authService = {
   login,
   register,
   updateAccount,
-  logout,
+
 };
 
 export default authService;

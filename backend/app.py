@@ -6,10 +6,11 @@ from flask_cors import CORS
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import os
 import logging
 from flask_jwt_extended import JWTManager, create_access_token
+from flask_mail import Mail, Message
+import secrets
 
 
 app = Flask(__name__)
@@ -26,16 +27,46 @@ login_manager = LoginManager(app)
 app.config['JWT_SECRET_KEY'] = 'TEST'
 jwt = JWTManager(app)
 
+
+
+
 #class user ==> attributs 
-class User(db.Model, UserMixin):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    email_verified = db.Column(db.Boolean, default=False)
+    verification_token = db.Column(db.String(120), unique=True, nullable=True)
 
 @login_manager.user_loader
 def load_user(user_id): 
     return User.query.get(int(user_id))
+
+
+#setup email 
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'test2104e@gmail.com'
+app.config['MAIL_PASSWORD'] = 'Aazzee@1'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
+mail = Mail(app)
+
+
+#send verification code 
+
+def send_verification_email(user):
+    token = secrets.token_urlsafe(20)
+    user.verification_token = token
+    db.session.commit()
+
+    verification_url = f"http://yourdomain.com/verify/{token}"
+    msg = Message('Please verify your email', sender='your-email@example.com', recipients=[user.email])
+    msg.body = f'Please click the link to verify your email address: {verification_url}'
+    mail.send(msg)
 
 
 #register function to create a new user
@@ -51,12 +82,28 @@ def register():
     user = User(username=data['username'], email=data['email'], password=hashed_password)
     db.session.add(user)
     db.session.commit()
+    send_verification_email(user)
     user_data = {
         'id': user.id,
         'username': user.username,
         'email': user.email
     }
     return jsonify({'message': 'User registered successfully','user':user_data}), 201
+
+
+#verification code 
+
+@app.route('/verify/<token>', methods=['GET'])
+def verify_email(token):
+    user = User.query.filter_by(verification_token=token).first()
+
+    if user:
+        user.email_verified = True
+        user.verification_token = None
+        db.session.commit()
+        return jsonify({'message': 'Email verified successfully!'}), 200
+    else:
+        return jsonify({'error': 'Invalid or expired verification token.'}), 400
 
 #update user by Id
 
@@ -109,13 +156,6 @@ def login():
     else:
         return jsonify({'error': 'Login failed'}), 401
 
-#logout function
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return jsonify({'message': 'Logout successful'}), 200
 
 
 # get user data  
@@ -131,66 +171,67 @@ def get_user():
 
 #Ai 
 
-def load_training_data(data_file, labels_file):
+DATASET_COLUMNS = [
+    "DATETRANSACTION", "NumClient", "SensTransaction", "NumeroValeur", 
+    "QuantiteNegociee", "CoursTransaction", "Montant", "NAT", 
+    "GESTION", "COMMERC", "SOLDE", "Depose", "TUNSFAX"
+]
+
+def load_transaction_data(data_file):
     if not os.path.exists(data_file):
         raise FileNotFoundError(f"Data file '{data_file}' not found.")
-    if not os.path.exists(labels_file):
-        raise FileNotFoundError(f"Labels file '{labels_file}' not found.")
     
-    with open(data_file, 'r') as df, open(labels_file, 'r') as lf:
-        train_data = [line.strip() for line in df.readlines()]
-        train_labels = [line.strip() for line in lf.readlines()]
+    with open(data_file, 'r') as df:
+        lines = df.readlines()
 
-    if not train_data:
+    if not lines:
         raise ValueError(f"Data file '{data_file}' is empty.")
-    if not train_labels:
-        raise ValueError(f"Labels file '{labels_file}' is empty.")
-    if len(train_data) != len(train_labels):
-        raise ValueError("The number of lines in data and labels files do not match.")
 
-    logging.info(f"Raw training data: {train_data}")
-    logging.info(f"Raw training labels: {train_labels}")
+    transactions = []
+    for line in lines:
+        values = line.strip().split(';')
+        if len(values) == len(DATASET_COLUMNS):
+            transactions.append(dict(zip(DATASET_COLUMNS, values)))
+        else:
+            logging.warning(f"Line skipped due to incorrect format: {line.strip()}")
 
-    # Filter out empty lines and lines with only stop words
-    filtered_data = []
-    filtered_labels = []
-    for data, label in zip(train_data, train_labels):
-        words = data.split()
-        if words and not all(word in ENGLISH_STOP_WORDS for word in words):
-            filtered_data.append(data)
-            filtered_labels.append(label)
+    logging.info(f"Loaded {len(transactions)} transactions.")
+    return transactions
 
-    logging.info(f"Filtered training data: {filtered_data}")
-    logging.info(f"Filtered training labels: {filtered_labels}")
 
-    return filtered_data, filtered_labels
+# Load the dataset
+transactions = load_transaction_data('../client/public/t1.csv')
 
-# Load training data and labels
-train_data, train_labels = load_training_data('train_data.txt', 'train_labels.txt')
-
-# Check if training data is empty after filtering
-if not train_data:
-    raise ValueError("Training data is empty after filtering out empty and stop-word-only lines.")
-
-logging.info(f"Training data size: {len(train_data)}")
-logging.info(f"Training labels size: {len(train_labels)}")
-
-# Create a pipeline with CountVectorizer, TfidfTransformer, and MultinomialNB
 model = Pipeline([
     ('vect', CountVectorizer()),
     ('tfidf', TfidfTransformer()),
     ('clf', MultinomialNB()),
 ])
 
-# Fit the model
-try:
-    model.fit(train_data, train_labels)
-    logging.info("Model training complete.")
-except ValueError as e:
-    logging.error(f"Error fitting the model: {e}")
-    raise
+train_data = [
+    "Hello", "Hi", "How are you?", "Good morning", "Good evening", 
+    "Nice to meet you", "What's up?", "How's it going?", "Help", 
+    "Assistance", "Show me the transaction details", 
+    "What is the status of transaction number 474?", 
+    "How many transactions were made by client 55586?"
+]
 
-# Function to generate responses with preprocessing
+train_labels = [
+    "Hello! How can I assist you?", "Hello!", "I'm fine, how about you?", 
+    "Good morning!", "Good evening!", "Nice to meet you too!", 
+    "Not much, just hanging out.", "All good here, how about you?", 
+    "How can I assist you?", "I'm here to help!", 
+    "Please provide the transaction number.", 
+    "Transaction 474 is a buy transaction with a total amount of 52,124.", 
+    "Client 55586 made 1 transaction."
+]
+
+
+
+
+model.fit(train_data, train_labels)
+logging.info("Chatbot model training complete.")
+
 def generate_response(text):
     text = text.lower()  # Convert text to lowercase
     try:
@@ -210,12 +251,54 @@ def chat():
 
         message = data['message']
         response = generate_response(message)
+
+        if "transaction number" in message.lower():
+            # Extract the transaction number from the message
+            transaction_number = extract_transaction_number(message)
+            if transaction_number:
+                response = get_transaction_details(transaction_number)
+            else:
+                response = "I couldn't find the transaction number in your message."
+
+        elif "client" in message.lower():
+            # Extract the client number from the message
+            client_number = extract_client_number(message)
+            if client_number:
+                response = get_client_transactions(client_number)
+            else:
+                response = "I couldn't find the client number in your message."
+
         return jsonify({'message': response})
 
     except Exception as e:
         logging.error(f"Error processing request: {e}")
         return jsonify({'error': 'An error occurred while processing your request.'}), 500
 
+def extract_transaction_number(message):
+    # Implement logic to extract transaction number from the message
+    import re
+    match = re.search(r'\btransaction number (\d+)\b', message.lower())
+    return match.group(1) if match else None
+
+def extract_client_number(message):
+    # Implement logic to extract client number from the message
+    import re
+    match = re.search(r'\bclient (\d+)\b', message.lower())
+    return match.group(1) if match else None
+
+def get_transaction_details(transaction_number):
+    # Retrieve transaction details from the dataset
+    for transaction in transactions:
+        if transaction["NumeroValeur"] == transaction_number:
+            return f"Transaction {transaction_number} details: {transaction}"
+    return f"No transaction found with number {transaction_number}."
+
+def get_client_transactions(client_number):
+    # Retrieve transactions made by a specific client
+    client_transactions = [t for t in transactions if t["NumClient"] == client_number]
+    if client_transactions:
+        return f"Client {client_number} made {len(client_transactions)} transactions."
+    return f"No transactions found for client {client_number}."
 
 
 

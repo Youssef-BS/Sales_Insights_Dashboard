@@ -25,7 +25,6 @@ const MainLayout = () => {
 
   const logOut = () => {
     dispatch(logout());
-    navigate("/"); 
   };
 
   console.log(currentUser);

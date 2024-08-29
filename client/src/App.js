@@ -6,7 +6,6 @@ import Login from "./pages/Login";
 import ResetPassword from "./pages/Resetpassword";
 import ForgotPassword from "./pages/Forgotpassword";
 import MainLayout from "./components/MainLayout";
-import Signup from "./pages/SignUp";
 import Register from "./pages/register";
 import PredicateAi from "./pages/PredicateAi";
 import AddNewLine from "./pages/AddNewLine";
