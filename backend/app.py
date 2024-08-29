@@ -11,6 +11,8 @@ import logging
 from flask_jwt_extended import JWTManager, create_access_token
 from flask_mail import Mail, Message
 import secrets
+from flask_login import UserMixin
+
 
 
 app = Flask(__name__)
@@ -31,7 +33,7 @@ jwt = JWTManager(app)
 
 
 #class user ==> attributs 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -130,7 +132,6 @@ def update_account(id):
 
 #function login 
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -138,21 +139,25 @@ def login():
     if not data or not all(key in data for key in ('email', 'password')):
         return jsonify({'error': 'Invalid data'}), 400
 
+    # Fetch the user by email
     user = User.query.filter_by(email=data['email']).first()
+
+    # Check if user exists and the password is correct
     if user and bcrypt.check_password_hash(user.password, data['password']):
-        login_user(user)
-        
+        login_user(user)  # Logs in the user session
+
         # Generate a JWT token
         access_token = create_access_token(identity=user.id)
         
+        # Prepare user data to return
         user_data = {
             'id': user.id,
             'username': user.username,
             'email': user.email
         }
 
-        # Return user data and the token
-        return jsonify({'message': 'Login successful', 'user': user_data, 'token': access_token})
+        # Return user data and the JWT token
+        return jsonify({'message': 'Login successful', 'user': user_data, 'token': access_token}), 200
     else:
         return jsonify({'error': 'Login failed'}), 401
 

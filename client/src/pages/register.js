@@ -36,7 +36,7 @@ const Register = () => {
 
   useEffect(() => {
     if (isSuccess && user) {
-      navigate("admin");
+      navigate("/");
     } else {
       navigate("");
     }
