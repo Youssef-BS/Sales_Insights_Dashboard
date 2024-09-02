@@ -5,6 +5,8 @@ import * as yup from "yup";
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { register } from "../features/auth/authSlice";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 let schema = yup.object().shape({
   username: yup.string().required("Name is Required"),
@@ -35,15 +37,16 @@ const Register = () => {
   const { user, isError, isSuccess, isLoading, message } = authState.auth;
 
   useEffect(() => {
-    if (isSuccess && user) {
-      navigate("/");
-    } else {
-      navigate("");
+    if (isSuccess) {
+      toast.success("Registration successful! Please check your email to verify your account.");
+    } else if (isError) {
+      toast.error("Registration failed. Please try again.");
     }
-  }, [user, isError, isSuccess, isLoading]);
+  }, [user, isError, isSuccess, isLoading, navigate]);
 
   return (
     <div className="py-5" style={{ background: "#201E43", minHeight: "100vh" }}>
+      <ToastContainer />
       <br />
       <br />
       <br />
@@ -53,7 +56,7 @@ const Register = () => {
         <h3 className="text-center title">Register</h3>
         <p className="text-center">Create your account to continue.</p>
         <div className="error text-center">
-          {message.message == "Rejected" ? "Registration failed" : ""}
+          {message.message === "Rejected" ? "Registration failed" : ""}
         </div>
         <form action="" onSubmit={formik.handleSubmit}>
           <CustomInput

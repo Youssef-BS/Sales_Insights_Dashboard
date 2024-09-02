@@ -12,6 +12,10 @@ from flask_jwt_extended import JWTManager, create_access_token
 from flask_mail import Mail, Message
 import secrets
 from flask_login import UserMixin
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 
 
 
@@ -50,8 +54,8 @@ def load_user(user_id):
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'test2104e@gmail.com'
-app.config['MAIL_PASSWORD'] = 'Aazzee@1'
+app.config['MAIL_USERNAME'] = 'wassimna68@gmail.com'
+app.config['MAIL_PASSWORD'] = 'blavsuxydmqtqtjc'
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
@@ -65,7 +69,7 @@ def send_verification_email(user):
     user.verification_token = token
     db.session.commit()
 
-    verification_url = f"http://yourdomain.com/verify/{token}"
+    verification_url = f"http://127.0.0.1:3000/verify-email/{token}"
     msg = Message('Please verify your email', sender='your-email@example.com', recipients=[user.email])
     msg.body = f'Please click the link to verify your email address: {verification_url}'
     mail.send(msg)
@@ -144,20 +148,23 @@ def login():
 
     # Check if user exists and the password is correct
     if user and bcrypt.check_password_hash(user.password, data['password']):
-        login_user(user)  # Logs in the user session
+        if user.email_verified:  # Check if the email is verified
+            login_user(user)  # Logs in the user session
 
-        # Generate a JWT token
-        access_token = create_access_token(identity=user.id)
-        
-        # Prepare user data to return
-        user_data = {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email
-        }
+            # Generate a JWT token
+            access_token = create_access_token(identity=user.id)
 
-        # Return user data and the JWT token
-        return jsonify({'message': 'Login successful', 'user': user_data, 'token': access_token}), 200
+            # Prepare user data to return
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            }
+
+            # Return user data and the JWT token
+            return jsonify({'message': 'Login successful', 'user': user_data, 'token': access_token}), 200
+        else:
+            return jsonify({'error': 'Email not verified'}), 403
     else:
         return jsonify({'error': 'Login failed'}), 401
 
@@ -171,6 +178,68 @@ def get_user():
     return jsonify({'username': current_user.username, 'email': current_user.email})
 
 
+
+
+
+#reset password 
+
+@app.route('/reset-password-request', methods=['POST'])
+def reset_password_request():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Generate a password reset token
+        serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        token = serializer.dumps(email, salt='reset-password')
+
+        # Create password reset URL
+        reset_url = f"http://127.0.0.1:3000/reset-password/{token}"
+
+        # Send password reset email
+        msg = Message("Password Reset Request", sender='your-email@example.com', recipients=[email])
+        msg.body = f"Please click the link to reset your password: {reset_url}"
+        mail.send(msg)
+
+        return jsonify({'message': 'Password reset email sent'}), 200
+
+    return jsonify({'error': 'Email not found'}), 404
+
+
+# 2 nd function 
+
+@app.route('/reset-password/<token>', methods=['POST'])
+def reset_password(token):
+    data = request.get_json()
+    new_password = data.get('password')
+
+    if not new_password:
+        return jsonify({'error': 'Password is required'}), 400
+
+    try:
+        # Verify the token
+        serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        email = serializer.loads(token, salt='reset-password', max_age=3600)  # Token expires in 1 hour
+
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            # Update the user's password
+            user.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+            user.verification_token = None  # Clear the token after use
+            db.session.commit()
+
+            return jsonify({'message': 'Password reset successful'}), 200
+
+        return jsonify({'error': 'User not found'}), 404
+
+    except SignatureExpired:
+        return jsonify({'error': 'Token expired'}), 400
 
 
 
@@ -304,6 +373,53 @@ def get_client_transactions(client_number):
     if client_transactions:
         return f"Client {client_number} made {len(client_transactions)} transactions."
     return f"No transactions found for client {client_number}."
+
+
+
+#new stat with upload file
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    file = request.files['file']
+    if file and file.filename.endswith('.csv'):
+        df = pd.read_csv(file, delimiter=';')  # Use semicolon as the delimiter
+        return process_file(df)
+    else:
+        return jsonify({'error': 'Invalid file format. Please upload a .csv file.'}), 400
+
+def process_file(df):
+    # Replace NaT values in the 'DTCOURS' column with an empty string or a specific placeholder
+    df['DTCOURS'] = df['DTCOURS'].fillna(value='')
+
+    # Convert the 'DTCOURS' column to a string format if necessary
+    df['DTCOURS'] = df['DTCOURS'].astype(str)
+
+    # Calculate the total QTITEVAL
+    total_quantity = df['QTITEVAL'].sum()
+
+    # Calculate the percentage each client holds
+    df['Percentage'] = (df['QTITEVAL'] / total_quantity) * 100
+
+    # Sort by QTITEVAL in descending order
+    df = df.sort_values('QTITEVAL', ascending=False)
+
+    # Calculate cumulative percentage
+    df['Cumulative_Percentage'] = df['Percentage'].cumsum()
+
+    # Determine 20% and 80% clients
+    top_20_percent = df[df['Cumulative_Percentage'] <= 20]
+    remaining_80_percent = df[df['Cumulative_Percentage'] > 20]
+
+    # Risk assessment
+    risk_status = "Safe"
+    if top_20_percent['QTITEVAL'].sum() > (0.8 * total_quantity):
+        risk_status = "Risky"
+
+    # Convert the DataFrame to a list of dictionaries for JSON response
+    data = df.to_dict(orient='records')
+
+    # Return the processed data and risk status
+    return jsonify({'risk_status': risk_status, 'data': data})
+
 
 
 

@@ -3,14 +3,16 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import ResetPassword from "./pages/Resetpassword";
-import ForgotPassword from "./pages/Forgotpassword";
+import ResetPassword from "./pages/ResetPassword";
+import RequestPasswordReset from "./pages/RequestPasswordRequest";
 import MainLayout from "./components/MainLayout";
 import Register from "./pages/register";
 import PredicateAi from "./pages/PredicateAi";
 import AddNewLine from "./pages/AddNewLine";
 import AccountDetails from "./pages/AccountDetails";
 import PrivateRoute from "./components/PrivateRoute";
+import VerifEmail from "./pages/VerifEmail";
+
 
 function App() {
   const currentUser = useSelector((state) => state.auth.user);
@@ -20,8 +22,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/signup" element={<Register />} />
+        <Route path="/verify-email/:token" element={<VerifEmail />} />
+        <Route path="/request-password-reset" element={<RequestPasswordReset />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Protected Routes */}
         <Route

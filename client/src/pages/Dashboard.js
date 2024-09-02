@@ -94,47 +94,56 @@ const Dashboard = () => {
     const nbAchat = data.filter(item => item.SensTransaction === 'A').length;
     
     const totalRevenue = data.reduce((acc, curr) => acc + curr.Montant, 0);
-    const totalQuantity = nbAchat - nbVente ;
+
+    const totalQuantityA = data
+        .filter(item => item.SensTransaction === 'A')
+        .reduce((acc, curr) => acc + curr.QuantiteNegociee, 0);
+
+    const totalQuantityV = data
+        .filter(item => item.SensTransaction === 'V')
+        .reduce((acc, curr) => acc + curr.QuantiteNegociee, 0);
+
+    const totalQuantity = totalQuantityA - totalQuantityV;
     const totalTransactions = data.length;
 
     const tunisSfaxStats = data.reduce((acc, curr) => {
-      if (!acc[curr.TUNSFAX]) {
-        acc[curr.TUNSFAX] = 0;
-      }
-      acc[curr.TUNSFAX] += 1;
-      return acc;
+        if (!acc[curr.TUNSFAX]) {
+            acc[curr.TUNSFAX] = 0;
+        }
+        acc[curr.TUNSFAX] += 1;
+        return acc;
     }, {});
 
     const commercStats = data.reduce((acc, curr) => {
-      if (!acc[curr.COMMERC]) {
-        acc[curr.COMMERC] = { revenue: 0, transactions: 0 };
-      }
-      acc[curr.COMMERC].revenue += curr.Montant;
-      acc[curr.COMMERC].transactions += 1;
-      return acc;
+        if (!acc[curr.COMMERC]) {
+            acc[curr.COMMERC] = { revenue: 0, transactions: 0 };
+        }
+        acc[curr.COMMERC].revenue += curr.Montant;
+        acc[curr.COMMERC].transactions += 1;
+        return acc;
     }, {});
 
     const productStats = data.reduce((acc, curr) => {
-      if (!acc[curr.NumeroValeur]) {
-        acc[curr.NumeroValeur] = { revenue: 0, quantity: 0 };
-      }
-      acc[curr.NumeroValeur].revenue += curr.Montant;
-      acc[curr.NumeroValeur].quantity += curr.QuantiteNegociee;
-      return acc;
+        if (!acc[curr.NumeroValeur]) {
+            acc[curr.NumeroValeur] = { revenue: 0, quantity: 0 };
+        }
+        acc[curr.NumeroValeur].revenue += curr.Montant;
+        acc[curr.NumeroValeur].quantity += curr.QuantiteNegociee;
+        return acc;
     }, {});
 
     const commercRevenuePercentage = Object.entries(commercStats).map(([commerc, stats]) => ({
-      commerc,
-      percentage: (stats.revenue / totalRevenue) * 100,
+        commerc,
+        percentage: (stats.revenue / totalRevenue) * 100,
     }));
 
     const actifNetTotal = data.reduce((acc, curr) => {
-      const quantity = curr.SensTransaction === 'A' ? curr.QuantiteNegociee : -curr.QuantiteNegociee;
-      return acc + (quantity * curr.Montant);
+        const quantity = curr.SensTransaction === 'A' ? curr.QuantiteNegociee : -curr.QuantiteNegociee;
+        return acc + (quantity * curr.Montant);
     }, 0);
 
-    return { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal };
-  };
+    return { totalRevenue, totalQuantityA, totalQuantityV, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal };
+};
 
   const { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal } = calculateStats(filteredData);
 

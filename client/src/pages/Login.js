@@ -74,7 +74,7 @@ const Login = () => {
             <div className="error mt-2">{formik.errors.password}</div>
           )}
           <div className="mb-3 text-end">
-            <Link to="/forgot-password">Forgot Password?</Link>
+            <Link to="/request-password-reset">Forgot Password?</Link>
           </div>
           <button
             className="border-0 px-3 py-2 text-white fw-bold w-100 text-center text-decoration-none fs-5"

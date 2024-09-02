@@ -1,129 +1,84 @@
 import React, { useState } from 'react';
-import { Button, Form, Alert, Spinner } from 'react-bootstrap';
 import axios from 'axios';
-import { Column, Line, Pie } from '@ant-design/plots';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const PredicateAI = () => {
-  const [file, setFile] = useState(null);
-  const [prediction, setPrediction] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const PredicateAi = () => {
+    const [file, setFile] = useState(null);
+    const [result, setResult] = useState(null);
+    const [error, setError] = useState(null);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+    const handleFileChange = (e) => {
+        setFile(e.target.files[0]);
+        setError(null);
+    };
 
-  const handleFileUpload = async () => {
-    if (!file) {
-      setError('Please select a file');
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
+    const handleUpload = async () => {
+        if (!file) {
+            setError('Please select a file before uploading.');
+            return;
+        }
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const response = await axios.post('http://localhost:5000/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+        try {
+            const response = await axios.post('http://localhost:5000/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            setResult(response.data);
+        } catch (err) {
+            console.error('Error uploading file:', err);
+            setError('Failed to upload the file. Please try again.');
+        }
+    };
 
-      const predictionResponse = await axios.post('http://localhost:5000/predict', response.data);
-      setPrediction(predictionResponse.data);
-    } catch (err) {
-      setError('Error uploading file or predicting data');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return (
+        <div className="container mt-5">
+            <div className="card">
+                <div className="card-body">
+                    <h2 className="card-title">Upload Portfolio File</h2>
+                    <div className="mb-3">
+                        <input
+                            type="file"
+                            className="form-control"
+                            onChange={handleFileChange}
+                            accept=".csv"
+                        />
+                    </div>
+                    <button className="btn btn-primary" onClick={handleUpload}>Upload</button>
+                    
+                    {error && <p className="text-danger mt-3">{error}</p>}
 
-  // Configure the charts with prediction data
-  const columnConfig = {
-    data: prediction.map((item, index) => ({
-      type: `Record ${index + 1}`,
-      value: item
-    })),
-    xField: 'type',
-    yField: 'value',
-    color: '#134B70',
-  };
-
-  const lineConfig = {
-    data: prediction.map((item, index) => ({
-      x: index + 1,
-      y: item
-    })),
-    xField: 'x',
-    yField: 'y',
-    color: '#134B70',
-  };
-
-  const pieConfig = {
-    data: prediction.map((item, index) => ({
-      type: `Record ${index + 1}`,
-      value: item
-    })),
-    angleField: 'value',
-    colorField: 'type',
-    radius: 1,
-    label: {
-      type: 'outer',
-      content: '{name} {percentage}',
-    },
-    color: ['#508C9B', '#134B70'],
-  };
-
-  return (
-    <div className="container mt-5">
-      <div className="card p-4 shadow-sm">
-        <h3 className="text-center mb-4">Upload CSV and Get Prediction</h3>
-        
-        <Form>
-          <Form.Group controlId="formFile">
-            <Form.Label>Upload CSV File</Form.Label>
-            <Form.Control type="file" accept=".csv" onChange={handleFileChange} />
-          </Form.Group>
-          
-          <Button
-            variant="primary"
-            className="mt-3"
-            onClick={handleFileUpload}
-            disabled={loading}
-          >
-            {loading ? <Spinner animation="border" size="sm" /> : 'Upload and Predict'}
-          </Button>
-        </Form>
-
-        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-        {prediction.length > 0 && (
-          <div className="mt-4">
-            <h4 className="text-center mb-4">Prediction Results</h4>
-
-            <div className="mb-5">
-              <h5>Column Chart</h5>
-              <Column {...columnConfig} />
+                    {result && (
+                        <div className="mt-4">
+                            <h3>Risk Assessment: {result.risk_status}</h3>
+                            <h4>Data:</h4>
+                            <table className="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Quantity</th>
+                                        <th>Percentage</th>
+                                        <th>Cumulative Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {result.data.map((row, index) => (
+                                        <tr key={index}>
+                                            <td>{row.QTITEVAL}</td>
+                                            <td>{row.Percentage.toFixed(2)}%</td>
+                                            <td>{row.Cumulative_Percentage.toFixed(2)}%</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
-
-            <div className="mb-5">
-              <h5>Line Chart</h5>
-              <Line {...lineConfig} />
-            </div>
-
-            <div className="mb-5">
-              <h5>Pie Chart</h5>
-              <Pie {...pieConfig} />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
-export default PredicateAI;
+export default PredicateAi;

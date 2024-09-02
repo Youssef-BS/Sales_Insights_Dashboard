@@ -23,12 +23,6 @@ const login = async (userData) => {
 
 const register = async (userData) => {
   const response = await axios.post(`${base_url}/register`, userData);
-  if (response.data) {
-    const { token, user } = response.data;
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", token);
-    setAuthToken(token);
-  }
   return response.data;
 };
 
@@ -43,13 +37,31 @@ const updateAccount = async (id, userData) => {
   return response.data;
 };
 
+const verificationEmail = async (token) => {
+  const response = await axios.get(`${base_url}/verify/${token}`);
+  return response.data;
+};
+
+
+const resetPasswordRequest = async (email) => {
+  const response = await axios.post(`${base_url}/reset-password-request`, { email });
+  return response.data;
+};
+
+const resetPassword = async (token, password) => {
+  const response = await axios.post(`${base_url}/reset-password/${token}`, { password });
+  return response.data;
+};
+
 
 
 const authService = {
   login,
   register,
   updateAccount,
-
+  verificationEmail ,
+  resetPasswordRequest,
+  resetPassword,
 };
 
 export default authService;
