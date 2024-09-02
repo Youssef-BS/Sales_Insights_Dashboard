@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Column, Pie } from '@ant-design/plots';
+import Papa from 'papaparse';
 
 const PredicateAi = () => {
     const [file, setFile] = useState(null);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
         setError(null);
+        setResult(null); // Reset result on file change
     };
 
     const handleUpload = async () => {
@@ -20,6 +24,7 @@ const PredicateAi = () => {
 
         const formData = new FormData();
         formData.append('file', file);
+        setLoading(true);
 
         try {
             const response = await axios.post('http://localhost:5000/upload', formData, {
@@ -31,7 +36,47 @@ const PredicateAi = () => {
         } catch (err) {
             console.error('Error uploading file:', err);
             setError('Failed to upload the file. Please try again.');
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const configColumn = {
+        data: result ? result.data : [],
+        xField: 'QTITEVAL',
+        yField: 'Percentage',
+        xAxis: {
+            label: {
+                autoRotate: true,
+            },
+        },
+        label: {
+            position: 'middle',
+            style: {
+                fill: '#FFFFFF',
+                opacity: 0.6,
+            },
+        },
+        color: '#5B8FF9',
+        height: 400,
+    };
+
+    const configPie = {
+        appendPadding: 10,
+        data: result ? result.data : [],
+        angleField: 'Percentage',
+        colorField: 'QTITEVAL',
+        radius: 0.8,
+        label: {
+            type: 'outer',
+            content: '{name} {percentage}',
+        },
+        interactions: [
+            {
+                type: 'element-active',
+            },
+        ],
+        height: 400,
     };
 
     return (
@@ -47,7 +92,9 @@ const PredicateAi = () => {
                             accept=".csv"
                         />
                     </div>
-                    <button className="btn btn-primary" onClick={handleUpload}>Upload</button>
+                    <button className="btn btn-primary" onClick={handleUpload} disabled={loading}>
+                        {loading ? 'Uploading...' : 'Upload'}
+                    </button>
                     
                     {error && <p className="text-danger mt-3">{error}</p>}
 
@@ -66,13 +113,23 @@ const PredicateAi = () => {
                                 <tbody>
                                     {result.data.map((row, index) => (
                                         <tr key={index}>
-                                            <td>{row.QTITEVAL}</td>
+                                            <td>{Number(row.QTITEVAL).toLocaleString()}</td>
                                             <td>{row.Percentage.toFixed(2)}%</td>
                                             <td>{row.Cumulative_Percentage.toFixed(2)}%</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+
+                            <div className="mt-4">
+                                <h4>Percentage Distribution</h4>
+                                <Column {...configColumn} />
+                            </div>
+
+                            <div className="mt-4">
+                                <h4>Quantity Distribution</h4>
+                                <Pie {...configPie} />
+                            </div>
                         </div>
                     )}
                 </div>

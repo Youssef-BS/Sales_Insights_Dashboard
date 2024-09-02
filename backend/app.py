@@ -381,8 +381,15 @@ def get_client_transactions(client_number):
 def upload_file():
     file = request.files['file']
     if file and file.filename.endswith('.csv'):
-        df = pd.read_csv(file, delimiter=';')  # Use semicolon as the delimiter
-        return process_file(df)
+        try:
+            df = pd.read_csv(file, delimiter=';')  # Use semicolon as the delimiter
+        except Exception as e:
+            return jsonify({'error': f'Error reading CSV file: {str(e)}'}), 400
+
+        if set(['NUMVAL', 'NOMVAL', 'COURS', 'DTCOURS', 'NUMCLI', 'COMMERC', 'QTITEVAL']).issubset(df.columns):
+            return process_file(df)
+        else:
+            return jsonify({'error': 'CSV file is missing required columns.'}), 400
     else:
         return jsonify({'error': 'Invalid file format. Please upload a .csv file.'}), 400
 
@@ -405,11 +412,11 @@ def process_file(df):
     # Calculate cumulative percentage
     df['Cumulative_Percentage'] = df['Percentage'].cumsum()
 
-    # Determine 20% and 80% clients
+    # Risk assessment based on the cumulative percentage
     top_20_percent = df[df['Cumulative_Percentage'] <= 20]
     remaining_80_percent = df[df['Cumulative_Percentage'] > 20]
 
-    # Risk assessment
+    # Determine if it's risky
     risk_status = "Safe"
     if top_20_percent['QTITEVAL'].sum() > (0.8 * total_quantity):
         risk_status = "Risky"
