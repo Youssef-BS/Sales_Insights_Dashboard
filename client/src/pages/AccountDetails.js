@@ -8,8 +8,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const AccountDetails = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [editPassword, setEditPassword] = useState(false);
-  const [editInformationDetails, setEditInformationDetails] = useState(true); 
+  const [editInformationDetails, setEditInformationDetails] = useState(true);
 
   const dispatch = useDispatch();
   const { user, isLoading } = useSelector((state) => state.auth);
@@ -53,6 +55,48 @@ const AccountDetails = () => {
       })
       .catch((err) => {
         toast.error(err.message || 'Failed to update account.', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
+      });
+  };
+
+  const handleUpdatePassword = () => {
+    if (!password || !confirmPassword) {
+      toast.warn('Please fill in all password fields.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.warn('Passwords do not match.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    dispatch(
+      updateAccount({
+        id: user?.id,
+        userData: {
+          password : password,
+        },
+      })
+    )
+      .unwrap()
+      .then(() => {
+        toast.success('Password updated successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
+        setPassword('');
+        setConfirmPassword('');
+      })
+      .catch((err) => {
+        toast.error(err.message || 'Failed to update password.', {
           position: 'top-right',
           autoClose: 3000,
         });
@@ -120,8 +164,37 @@ const AccountDetails = () => {
       {editPassword && (
         <div className="row justify-content-center">
           <div className="col-md-6">
-            <p>Password reset form goes here.</p>
-            
+            <div className="form-group">
+              <label htmlFor="password">New Password</label>
+              <input
+                type="password"
+                className="form-control"
+                id="password"
+                placeholder="Enter your new password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm New Password</label>
+              <input
+                type="password"
+                className="form-control"
+                id="confirmPassword"
+                placeholder="Confirm your new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <button
+              className="btn btn-primary btn-block mt-3"
+              onClick={handleUpdatePassword}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Updating...' : 'Update Password'}
+            </button>
           </div>
         </div>
       )}

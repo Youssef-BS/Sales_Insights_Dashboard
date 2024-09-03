@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Column, Pie } from '@ant-design/plots';
-import Papa from 'papaparse';
+import ReactPaginate from 'react-paginate';
 
 const PredicateAi = () => {
     const [file, setFile] = useState(null);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [itemsPerPage] = useState(20);
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
         setError(null);
-        setResult(null); // Reset result on file change
+        setResult(null); 
     };
 
     const handleUpload = async () => {
@@ -41,8 +43,14 @@ const PredicateAi = () => {
         }
     };
 
+    const handlePageClick = (event) => {
+        setCurrentPage(event.selected);
+    };
+
+    const paginatedData = result?.data.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage) || [];
+
     const configColumn = {
-        data: result ? result.data : [],
+        data: result ? paginatedData : [],
         xField: 'QTITEVAL',
         yField: 'Percentage',
         xAxis: {
@@ -63,7 +71,7 @@ const PredicateAi = () => {
 
     const configPie = {
         appendPadding: 10,
-        data: result ? result.data : [],
+        data: result ? paginatedData : [],
         angleField: 'Percentage',
         colorField: 'QTITEVAL',
         radius: 0.8,
@@ -100,6 +108,7 @@ const PredicateAi = () => {
 
                     {result && (
                         <div className="mt-4">
+                            <h1>Commerc Number : {result.data[0].COMMERC}</h1>
                             <h3>Risk Assessment: {result.risk_status}</h3>
                             <h4>Data:</h4>
                             <table className="table table-striped">
@@ -111,7 +120,7 @@ const PredicateAi = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {result.data.map((row, index) => (
+                                    {paginatedData.map((row, index) => (
                                         <tr key={index}>
                                             <td>{Number(row.QTITEVAL).toLocaleString()}</td>
                                             <td>{row.Percentage.toFixed(2)}%</td>
@@ -120,6 +129,28 @@ const PredicateAi = () => {
                                     ))}
                                 </tbody>
                             </table>
+
+                            {result.data.length > itemsPerPage && (
+                                <ReactPaginate
+                                    previousLabel={'Previous'}
+                                    nextLabel={'Next'}
+                                    breakLabel={'...'}
+                                    pageCount={Math.ceil(result.data.length / itemsPerPage)}
+                                    marginPagesDisplayed={2}
+                                    pageRangeDisplayed={5}
+                                    onPageChange={handlePageClick}
+                                    containerClassName={'pagination'}
+                                    pageClassName={'page-item'}
+                                    pageLinkClassName={'page-link'}
+                                    previousClassName={'page-item'}
+                                    previousLinkClassName={'page-link'}
+                                    nextClassName={'page-item'}
+                                    nextLinkClassName={'page-link'}
+                                    breakClassName={'page-item'}
+                                    breakLinkClassName={'page-link'}
+                                    activeClassName={'active'}
+                                />
+                            )}
 
                             <div className="mt-4">
                                 <h4>Percentage Distribution</h4>

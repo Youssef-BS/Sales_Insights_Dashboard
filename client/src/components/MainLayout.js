@@ -55,7 +55,7 @@ const MainLayout = () => {
             {
               key: "Predicate",
               icon: <AiOutlineSafetyCertificate className="fs-4" />,
-              label: "Predicate With AI",
+              label: "Upload File",
             },
             {
               key: "AddNewLine",
