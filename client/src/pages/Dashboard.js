@@ -133,17 +133,48 @@ const Dashboard = () => {
     }, {});
 
     const commercRevenuePercentage = Object.entries(commercStats).map(([commerc, stats]) => ({
-        commerc,
-        percentage: (stats.revenue / totalRevenue) * 100,
-    }));
+      commerc,
+      percentage: totalRevenue !== 0 ? (stats.revenue / totalRevenue) * 100 : 0, 
+      revenue: stats.revenue,
+      transactions: stats.transactions,
+  }));
 
     const actifNetTotal = data.reduce((acc, curr) => {
         const quantity = curr.SensTransaction === 'A' ? curr.QuantiteNegociee : -curr.QuantiteNegociee;
         return acc + (quantity * curr.Montant);
     }, 0);
 
-    return { totalRevenue, totalQuantityA, totalQuantityV, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal };
+    const productRevenueStats = data.reduce((acc, curr) => {
+        if (curr.NumeroValeur === 474 || curr.NumeroValeur === 1570) {
+            const multiplier = curr.NumeroValeur === 474 ? 0.75 : 0.8;
+            const revenue = curr.QuantiteNegociee * curr.Montant * multiplier * 365;
+
+            if (!acc[curr.NumeroValeur]) {
+                acc[curr.NumeroValeur] = { revenue: 0, days: 0 };
+            }
+            acc[curr.NumeroValeur].revenue += revenue;
+            acc[curr.NumeroValeur].days += 1;
+        }
+        return acc;
+    }, {});
+
+    return { 
+        totalRevenue, 
+        totalQuantityA, 
+        totalQuantityV, 
+        totalQuantity, 
+        totalTransactions, 
+        nbVente, 
+        nbAchat, 
+        tunisSfaxStats, 
+        commercStats, 
+        productStats, 
+        commercRevenuePercentage, 
+        actifNetTotal, 
+        productRevenueStats 
+    };
 };
+
 
   const { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal } = calculateStats(filteredData);
 
