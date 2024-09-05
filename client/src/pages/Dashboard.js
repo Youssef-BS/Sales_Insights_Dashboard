@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 import { useState, useEffect, useCallback } from 'react';
 import { Select, Table } from 'antd';
-import { Column, Pie } from '@ant-design/plots';
+import { Column, Pie , Line } from '@ant-design/plots';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ChatClient from './ChatClient';
 
@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [commercOptions, setCommercOptions] = useState([]);
   const [timeFilter, setTimeFilter] = useState('all');
 
+
+
   const loadData = useCallback(async () => {
     try {
       const [dataset1, dataset2] = await Promise.all([
@@ -27,15 +29,32 @@ const Dashboard = () => {
           Papa.parse(csvData, {
             header: true,
             skipEmptyLines: true,
-            transformHeader: header => header.trim(),
-            transform: (value, header) => header === 'Montant' ? parseFloat(value.replace(',', '.')) : value,
+            transformHeader: (header) => header.trim(),
+            transform: (value, header) =>
+              header === 'Montant' ? parseFloat(value.replace(',', '.')) : value,
             complete: (results) => {
-              resolve(results.data.map(item => ({
-                ...item,
-                DATETRANSACTION: new Date(item.DATETRANSACTION),
-                QuantiteNegociee: parseFloat(item.QuantiteNegociee),
-              })));
-            }
+              resolve(
+                results.data.map((item) => {
+                  // Custom date parsing function
+                  const parseDate = (dateString) => {
+                    const [datePart, timePart] = dateString.split(' ');
+                    const [day, month, year] = datePart.split('/');
+                    return new Date(`${year}-${month}-${day}T${timePart}`);
+                  };
+      
+                  const parsedDate = parseDate(item.DATETRANSACTION);
+      
+                  return {
+                    ...item,
+                    DATETRANSACTION: !isNaN(parsedDate) ? parsedDate : null, // Handle invalid dates
+                    QuantiteNegociee: parseFloat(item.QuantiteNegociee.replace(',', '.')),
+                  };
+                })
+              );
+            },
+            error: (error) => {
+              reject(error);
+            },
           });
         });
       };
@@ -114,6 +133,8 @@ const Dashboard = () => {
         return acc;
     }, {});
 
+    
+
     const commercStats = data.reduce((acc, curr) => {
         if (!acc[curr.COMMERC]) {
             acc[curr.COMMERC] = { revenue: 0, transactions: 0 };
@@ -139,10 +160,19 @@ const Dashboard = () => {
       transactions: stats.transactions,
   }));
 
-    const actifNetTotal = data.reduce((acc, curr) => {
-        const quantity = curr.SensTransaction === 'A' ? curr.QuantiteNegociee : -curr.QuantiteNegociee;
-        return acc + (quantity * curr.Montant);
-    }, 0);
+  const actifNetTotal = data.reduce((acc, curr) => {
+    const quantity = typeof curr.QuantiteNegociee === 'string'
+        ? parseFloat(curr.QuantiteNegociee.replace(',', '.'))
+        : curr.QuantiteNegociee;
+
+    const price = typeof curr.CoursTransaction === 'string'
+        ? parseFloat(curr.CoursTransaction.replace(',', '.'))
+        : curr.CoursTransaction;
+    const adjustedQuantity = curr.SensTransaction === 'A' ? quantity : -quantity;
+    return acc + (adjustedQuantity * price);
+}, 0);
+
+
 
     const productRevenueStats = data.reduce((acc, curr) => {
         if (curr.NumeroValeur === 474 || curr.NumeroValeur === 1570) {
@@ -177,7 +207,36 @@ const Dashboard = () => {
 
 
   const { totalRevenue, totalQuantity, totalTransactions, nbVente, nbAchat, tunisSfaxStats, commercStats, productStats, commercRevenuePercentage, actifNetTotal } = calculateStats(filteredData);
-
+  const calculateActifNetEvolution = (data) => {
+    // Aggregate data by date and calculate Actif Net for each date
+    const actifNetByDate = data.reduce((acc, curr) => {
+      const date = curr.DATETRANSACTION.toISOString().split('T')[0]; // Format the date to YYYY-MM-DD
+      const quantity = typeof curr.QuantiteNegociee === 'string'
+        ? parseFloat(curr.QuantiteNegociee.replace(',', '.'))
+        : curr.QuantiteNegociee;
+  
+      const price = typeof curr.CoursTransaction === 'string'
+        ? parseFloat(curr.CoursTransaction.replace(',', '.'))
+        : curr.CoursTransaction;
+  
+      const adjustedQuantity = curr.SensTransaction === 'A' ? quantity : -quantity;
+      const actifNetValue = adjustedQuantity * price;
+  
+      if (!acc[date]) {
+        acc[date] = 0;
+      }
+      acc[date] += actifNetValue;
+      return acc;
+    }, {});
+  
+    // Convert the aggregated object into an array for the chart
+    return Object.entries(actifNetByDate).map(([date, value]) => ({
+      date,
+      value,
+    }));
+  };
+  
+  const actifNetEvolutionData = calculateActifNetEvolution(filteredData);
   const generalConfig = {
     data: [
       { type: 'Total Revenue', value: totalRevenue },
@@ -189,7 +248,7 @@ const Dashboard = () => {
     ],
     xField: 'type',
     yField: 'value',
-    color: '#134B70',
+    color: '#C8A1E0',
   };
 
   const generalTableData = generalConfig.data.map(item => ({
@@ -220,7 +279,7 @@ const Dashboard = () => {
       type: 'outer',
       content: '{name}',
     },
-    color: ['#508C9B', '#134B70'], 
+    color: ['#C8A1E0', '#674188'], 
   };
 
   
@@ -234,7 +293,7 @@ const Dashboard = () => {
     data: productData,
     xField: 'product',
     yField: 'revenue',
-    color: '#134B70',
+    color: '#674188',
   };
 
   const commercData = Object.entries(commercStats).map(([commerc, stats]) => ({
@@ -247,7 +306,7 @@ const Dashboard = () => {
     data: commercData,
     xField: 'commerc',
     yField: 'revenue',
-    color: '#134B70',
+    color: '#674188',
   };
 
   const commercRevenueConfig = {
@@ -261,6 +320,42 @@ const Dashboard = () => {
     },
     color: ['red', 'blue', 'yellow', 'gray', 'cyan', 'purple', '#EF5A6F', 'orange', 'green' , '#FF76CE' , '#1E0342' , '#1AACAC' , '#D2E0FB' , '#6C3428' , '#D20062' , '#F5DD61' , '#9EB8D9' , '#A25772'], 
   };
+
+  const actifNetEvolutionConfig = {
+    data: actifNetEvolutionData,
+    xField: 'date',
+    yField: 'value',
+    xAxis: {
+      label: {
+        formatter: (v) => v.split('-').reverse().join('/'), // Assuming v is a date string
+      },
+    },
+    yAxis: {
+      label: {
+        formatter: (v) => (typeof v === 'number' ? v.toFixed(2) : v), // Ensure v is a number before formatting
+      },
+    },
+    lineStyle: {
+      stroke: '#674188',
+      lineWidth: 2,
+    },
+    point: {
+      size: 5,
+      shape: 'circle',
+      style: {
+        fill: '#C8A1E0',
+      },
+    },
+    tooltip: {
+      fields: ['date', 'value'],
+      formatter: (datum) => ({
+        name: 'Actif Net',
+        value: typeof datum.value === 'number' ? datum.value.toFixed(2) : datum.value, // Ensure formatting
+      }),
+    },
+  };
+  
+
   
 
   return (
@@ -338,7 +433,18 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-
+      <div className="row mt-4">
+      <div className="col-md-12">
+        <div className="card">
+          <div className="card-header bg-primary text-white">
+            Actif Net Evolution by Date
+          </div>
+          <div className="card-body">
+            <Line {...actifNetEvolutionConfig} />
+          </div>
+        </div>
+      </div>
+    </div>
       <div className="row mt-4">
         <div className="col-md-12">
           <div className="card">

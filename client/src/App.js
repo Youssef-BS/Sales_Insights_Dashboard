@@ -12,7 +12,7 @@ import AddNewLine from "./pages/AddNewLine";
 import AccountDetails from "./pages/AccountDetails";
 import PrivateRoute from "./components/PrivateRoute";
 import VerifEmail from "./pages/VerifEmail";
-
+import ChatClient from "./pages/ChatClient";
 
 function App() {
   const currentUser = useSelector((state) => state.auth.user);

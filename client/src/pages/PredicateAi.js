@@ -3,6 +3,7 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Column, Pie } from '@ant-design/plots';
 import ReactPaginate from 'react-paginate';
+import ChatClient from './ChatClient';
 
 const PredicateAi = () => {
     const [file, setFile] = useState(null);
@@ -17,7 +18,6 @@ const PredicateAi = () => {
         setError(null);
         setResult(null); 
     };
-
     const handleUpload = async () => {
         if (!file) {
             setError('Please select a file before uploading.');
@@ -34,6 +34,7 @@ const PredicateAi = () => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+            
             setResult(response.data);
         } catch (err) {
             console.error('Error uploading file:', err);
@@ -165,6 +166,7 @@ const PredicateAi = () => {
                     )}
                 </div>
             </div>
+            <ChatClient />
         </div>
     );
 };
