@@ -30,7 +30,7 @@ const MainLayout = () => {
   console.log(currentUser);
 
   return (
-    <Layout style={{ minHeight: "320vh" }}> 
+    <Layout style={{ minHeight: "400vh" }}> 
       <Sider trigger={null} collapsible collapsed={collapsed}>
         <div className="logo" style={{ width: "auto", height: "auto", justifyContent: "center", textAlign: "center", backgroundColor: "transparent", margin: "34px" }}>
           <img src={Logo} alt="logo" style={{ height: "75px", width: "75px", textAlign: "center", borderRadius: "100%" }} />

@@ -18,8 +18,8 @@ function ChatClient() {
     const handleSendMessage = async () => {
         if (inputText.trim() === '') return;
     
-        const currentDate = new Date(); // Current date
-        const newMessage = { name: 'User', message: inputText, date: currentDate }; // Add current date
+        const currentDate = new Date(); 
+        const newMessage = { name: 'User', message: inputText, date: currentDate }; 
         setMessages(prevMessages => [...prevMessages, newMessage]);
         setInputText('');
     
@@ -32,7 +32,7 @@ function ChatClient() {
                 },
             });
             const responseData = await response.json();
-            const botMessage = { name: 'Sam', message: responseData.message, date: currentDate }; // Add current date
+            const botMessage = { name: 'Sam', message: responseData.message, date: currentDate }; 
             setMessages(prevMessages => [...prevMessages, botMessage]);
         } catch (error) {
             console.error('Error:', error);
@@ -61,7 +61,7 @@ function ChatClient() {
                     {messages.map((msg, index) => (
                         <div key={index} className={`messages__item ${msg.name === 'Sam' ? 'messages__item--visitor' : 'messages__item--operator'}`}>
                             <div>{msg.message}</div>
-                            <div className="message__date">{msg.date.toLocaleString()}</div> {/* Display date */}
+                            <div className="message__date">{msg.date.toLocaleString()}</div> 
                         </div>
                     ))}
                 </div>

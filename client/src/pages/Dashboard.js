@@ -317,7 +317,7 @@
       data: productData,
       xField: 'product',
       yField: 'revenue',
-      color: '#674188',
+      color: '#0066CC',
     };
 
     const commercData = Object.entries(commercStats).map(([commerc, stats]) => ({
@@ -330,7 +330,7 @@
       data: commercData,
       xField: 'commerc',
       yField: 'revenue',
-      color: '#674188',
+      color: '#0066CC',
     };
 
     const commercRevenueConfig = {
@@ -360,14 +360,14 @@
         },
       },
       lineStyle: {
-        stroke: '#674188',
+        stroke: '#0066CC',
         lineWidth: 2,
       },
       point: {
         size: 5,
         shape: 'circle',
         style: {
-          fill: '#C8A1E0',
+          fill: '#0066CC',
         },
       },
       tooltip: {
