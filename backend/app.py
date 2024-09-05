@@ -283,22 +283,49 @@ model = Pipeline([
 ])
 
 train_data = [
-    "Hello", "Hi", "How are you?", "Good morning", "Good evening", 
-    "Nice to meet you", "What's up?", "How's it going?", "Help", 
-    "Assistance", "Show me the transaction details", 
+    "Hello", 
+    "Hi", 
+    "How are you?", 
+    "Good morning", 
+    "Good evening", 
+    "Nice to meet you", 
+    "What's up?", 
+    "How's it going?", 
+    "Help", 
+    "Assistance", 
+    "Show me the transaction details", 
     "What is the status of transaction number 474?", 
-    "How many transactions were made by client 55586?"
+    "How many transactions were made by client 55586?",
+    "Why is the net asset stagnant?",
+    "What can be done to increase purchases?",
+    "How to increase the net asset?",
+    "Propose a marketing strategy",
+    "Factors of increase or decrease",
+    "How to attract new clients?"
 ]
 
 train_labels = [
-    "Hello! How can I assist you?", "Hello!", "I'm fine, how about you?", 
-    "Good morning!", "Good evening!", "Nice to meet you too!", 
-    "Not much, just hanging out.", "All good here, how about you?", 
-    "How can I assist you?", "I'm here to help!", 
+    "Hello! How can I assist you?", 
+    "Hello!", 
+    "I'm fine, how about you?", 
+    "Good morning!", 
+    "Good evening!", 
+    "Nice to meet you too!", 
+    "Not much, just hanging out.", 
+    "All good here, how about you?", 
+    "How can I assist you?", 
+    "I'm here to help!", 
     "Please provide the transaction number.", 
     "Transaction 474 is a buy transaction with a total amount of 52,124.", 
-    "Client 55586 made 1 transaction."
+    "Client 55586 made 1 transaction.",
+    "The net asset might be stagnant due to lack of growth in revenue or high expenses.",
+    "To increase purchases, consider promotional campaigns, discounts, or loyalty programs.",
+    "To increase the net asset, focus on reducing expenses, increasing sales, and optimizing investments.",
+    "Consider a marketing strategy that targets new demographics, uses digital marketing, or enhances product visibility.",
+    "Factors that may cause an increase or decrease include market conditions, customer demand, and operational efficiency.",
+    "To attract new clients, enhance customer service, improve product offerings, and leverage social media marketing."
 ]
+
 
 
 
