@@ -342,7 +342,27 @@
         type: 'outer',
         content: '{name}',
       },
-      color: ['red', 'blue', 'yellow', 'gray', 'cyan', 'purple', '#EF5A6F', 'orange', 'green' , '#FF76CE' , '#1E0342' , '#1AACAC' , '#D2E0FB' , '#6C3428' , '#D20062' , '#F5DD61' , '#9EB8D9' , '#A25772'], 
+      color : [
+  '#EF5A6F', 
+  '#FF76CE', 
+  '#1E0342', 
+  '#1AACAC', 
+  '#D2E0FB', 
+  '#6C3428', 
+  '#D20062', 
+  '#F5DD61', 
+  '#9EB8D9', 
+  '#A25772', 
+  '#FF4500', 
+  '#00CED1', 
+  '#708090', 
+  '#F08080', 
+  '#FFD700', 
+  '#32CD32', 
+  '#8A2BE2', 
+  '#C71585', 
+  '#4682B4', 
+]
     };
 
     const actifNetEvolutionConfig = {
