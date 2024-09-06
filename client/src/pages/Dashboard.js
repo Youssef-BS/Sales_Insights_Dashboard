@@ -272,7 +272,7 @@
       ],
       xField: 'type',
       yField: 'value',
-      color: '#C8A1E0',
+      color: '#201E43',
     };
 
     const generalTableData = generalConfig.data.map(item => ({
@@ -317,7 +317,7 @@
       data: productData,
       xField: 'product',
       yField: 'revenue',
-      color: '#0066CC',
+      color: '#201E43',
     };
 
     const commercData = Object.entries(commercStats).map(([commerc, stats]) => ({
@@ -330,7 +330,7 @@
       data: commercData,
       xField: 'commerc',
       yField: 'revenue',
-      color: '#0066CC',
+      color: '#201E43',
     };
 
     const commercRevenueConfig = {
